@@ -1,0 +1,1 @@
+python main.py--mode 'train' -lr 0.00016 --downsample 4 --nr_gpu 4 --batch_size 16 --test_batch_size 25  -p 0.999 -ld 0.99999 -bin 100 --color lab -c 160 -ng 1 -l 4 --dataset imagenet --data_dir /home/ILSVRC2012/

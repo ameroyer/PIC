@@ -1,0 +1,1 @@
+python main.py --mode 'train' -lr 0.001 --downsample 2 --nr_gpu 4 --batch_size 16 --test_batch_size 9  -p 0.999 -ld 0.99995 -bin 100 --color lab -c 160 -ng 1 -l 4 --dataset cifar --data_dir /home/CIFAR/cifar-10/
