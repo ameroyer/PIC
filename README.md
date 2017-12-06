@@ -53,13 +53,13 @@ python main.py --nr_gpu 4 --batch_size 16 --test_batch_size 16 --init_batch_size
 
 Download the pre-trained models.
 ```bash
-wget http://pub.ist.ac.at/~aroyer/Models/PIC/cifar-model.tar.gz
+wget http://pub.ist.ac.at/~aroyer/Models/PIC/cifar_model.tar.gz
 tar -xzvf cifar_model.tar.gz
 ```
 
 
 ```bash
-wget http://pub.ist.ac.at/~aroyer/Models/PIC/imagenet-model.tar.gz
+wget http://pub.ist.ac.at/~aroyer/Models/PIC/imagenet_model.tar.gz
 tar -xzvf imagenet_model.tar.gz
 ```
 
