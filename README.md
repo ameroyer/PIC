@@ -14,13 +14,13 @@ Moreover, our training procedure is supported by a rigorous theoretical framewor
 ![sample1](examples/12.jpg)
 ![sample1](examples/3.jpg)
 ![sample1](examples/5.jpg)
-**Figure:** Input graysalce (left), original colored image (rigt) and samples from our model (middle columns)
+**Figure:** Input grayscale (left), original colored image (rigt) and samples from our model (middle columns)
 
-## Cite this work
+If you find this work useful, please cite
 ```
 "Probabilistic Image Colorization"
 Amelie Royer, Alexander Kolesnikov, Christoph H. Lampert
-arXiv 2017, https://arxiv.org/abs/1705.04258
+British Machine Vision Conference (BMVC), 2017
 ```
 
 ## Instructions
