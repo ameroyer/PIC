@@ -44,7 +44,7 @@ parser.add_argument('-m', '--nr_logistic_mix', type=int, default=10, help='Numbe
 parser.add_argument('-lr', '--learning_rate', type=float, default=1e-3, help='Initial learning rate')
 parser.add_argument('-ld', '--lr_decay', type=float, default=0.99999, help='Learning rate decay, applied every decay epoch')
 
-parser.add_argument('-g', '--nr_gpus', type=int, default=1, help='Number of GPUs')
+parser.add_argument('-g', '--nr_gpus', type=int, default=1, help='Number of GPUs. If 0, will run on one CPU.')
 parser.add_argument('-b', '--batch_size', type=int, default=32, help='Batch size per GPU (train)')
 parser.add_argument('-bt', '--test_batch_size', type=int, default=16, help='Batch size per GPU (test)')
 parser.add_argument('-bin', '--init_batch_size', type=int, default=300, help='Batch size per GPU for the data-dependent initialization.')
@@ -63,6 +63,11 @@ parser.add_argument('-nt', '--test_epochs', type=int, default=1, help='Log-likel
 args = parser.parse_args()
 
 ### Init
+use_gpu = True
+if args.nr_gpus == 0:
+    args.nr_gpus = 1
+    use_gpu = False
+    
 if args.color not in ['RGB', 'lab']:
     raise ValueError("Unknown color mode", args.color)
 
@@ -177,7 +182,7 @@ with tf.name_scope('MAIN'):
         x_in = tf.identity(xs[i], name="color_image")            # x_in RGB (BxWxHx3)
         x_gray = color_to_gray(xs_clr[i], colorspace=args.color) # x_gray colorspace (BxWxHx1)
 
-        with tf.device('/gpu:%i' % i):
+        with tf.device('/%s:%i' % ('gpu' if use_gpu else 'cpu', i)):
             picolor_out, embedding_out = picolor_with_scope(downsample_tf(x_in, args.downsample),
                                                             x_gray,
                                                             return_embedding=True)
@@ -253,7 +258,7 @@ with tf.name_scope("sampling"):
     embedding_cache = [None] * args.nr_gpus
     with tf.name_scope('picolor_sampling'):
         for i in range(args.nr_gpus):
-            with tf.device('/gpu:%d' % i):
+            with tf.device('/%s:%d' % ('gpu' if use_gpu else 'cpu', i)):
                 picolor_out, embedding_cache[i] = picolor_with_scope(x_canvas_gens[i],
                                                                      x_gray_gens[i],
                                                                      return_embedding=True)
