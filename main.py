@@ -4,7 +4,6 @@ import sys
 import argparse
 from time import gmtime, strftime
 
-import h5py
 import numpy as np
 import tensorflow as tf
 import scipy.ndimage as nd
@@ -98,6 +97,7 @@ if args.mode != 'demo':
         images_train = TRAIN['data'].reshape([-1, 3, 32, 32]).transpose([0, 2, 3, 1])
         images_test = TEST['data'].reshape([-1, 3, 32, 32]).transpose([0, 2, 3, 1])
     elif args.dataset == 'imagenet':
+        import h5py
         with h5py.File(os.path.join(args.data_dir, 'imagenet-128.hdf5')) as f:
             images_train = np.array(f['train'])
             images_test = np.array(f['val'])
