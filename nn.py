@@ -68,8 +68,10 @@ def conv(inp, name, filter_size, out_channels, stride=1,
                 out = tf.nn.atrous_conv2d(inp, V_norm, dilation, padding)
             m_init, v_init = tf.nn.moments(out, [0, 1, 2])
             scale_init = init_scale / tf.sqrt(v_init + 1e-8)
-            g = get_variable('g', shape=None, dtype=tf.float32, initializer=scale_init, trainable=True, regularizer=tf.contrib.layers.l2_regularizer(tf.GLOBAL['reg']))
-            b = get_variable('b', shape=None, dtype=tf.float32, initializer=-m_init * scale_init, trainable=True, regularizer=tf.contrib.layers.l2_regularizer(tf.GLOBAL['reg']))
+            g = get_variable('g', shape=(out_channels,), dtype=tf.float32, initializer=tf.constant_initializer(1.), trainable=True)
+            b = get_variable('b', shape=(out_channels,), dtype=tf.float32, initializer=tf.constant_initializer(0.), trainable=True)
+            g = tf.assign(g, scale_init)
+            b = tf.assign(b, -m_init * scale_init)
             out = tf.reshape(scale_init, [1, 1, 1, out_channels]) * (out - tf.reshape(m_init, [1, 1, 1, out_channels]))
             if nonlinearity is not None:
                 out = nonlinearity(out)
