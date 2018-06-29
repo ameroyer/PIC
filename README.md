@@ -68,12 +68,12 @@ Evaluate the model on the dataset validation split.
 ```bash
 python main.py --nr_gpu 4 --batch_size 16 --test_batch_size 25 --init_batch_size 100  \
                -c 160 -l 4 --downsample 4 --color lab --dataset imagenet --data_dir [data_dir] \
-               --mode "eval" --weights [path_to_checkpoint]
+               --mode "eval" --model [path_to_checkpoint]
 ```
 
 Apply the model on a given input.
 ```bash
 python main.py --nr_gpu 1 --batch_size 16 --test_batch_size 25 --init_batch_size 100  \
                -c 160 -l 4 --downsample 4 --color lab --dataset imagenet \
-               --mode "demo" --weights [path_to_checkpoint] --input [path to grayscale image]
+               --mode "demo" --model [path_to_checkpoint] --input [path to grayscale image]
 ```
