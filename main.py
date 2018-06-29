@@ -520,8 +520,9 @@ with tf.Session() as sess:
         x_gen = np.zeros((1, WIDTH // args.downsample, HEIGHT // args.downsample, 3), dtype=float)
         feed = ({x_gray_gen: image, scale_var:float(not args.sample_mode)})
         feed.update({embedding_cache[i]: sess.run(embedding_cache[i], {x_gray_gen: image}) for i in range(args.nr_gpus)})
-
+        
         for yi in range(0, WIDTH // args.downsample):
+            print('\rProcessing pixel row %d/%d' % (yi + 1, WIDTH // args.downsample), end='')
             for xi in range(0, HEIGHT // args.downsample):
                 feed.update({x_canvas_gen: x_gen})
                 new_x_gen_np = np.concatenate(sess.run(samplers_from_pic, feed))
