@@ -503,8 +503,12 @@ with tf.Session() as sess:
     ### Apply the model on one image
     else:
         image = imread(os.path.abspath(args.input))
-        w, h, _ = image.shape
-        image = imresize(image, (WIDTH, HEIGHT))[:, :, 0][:, :, None]
+        if len(image.shape) == 3:
+            w, h, _ = image.shape
+            image = imresize(image, (WIDTH, HEIGHT))[:, :, 0][:, :, None]
+        else:
+            w, h = image.shape
+            image = imresize(image, (WIDTH, HEIGHT))[:, :, None]
         base, ext = os.path.basename(args.input).rsplit('.', 1)
         out_path = os.path.join(log_dir, "%s_colorized.%s" % (base, ext))
 
