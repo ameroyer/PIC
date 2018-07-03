@@ -79,7 +79,7 @@ python main.py --nr_gpus 1 -c 160 -l 4 --downsample 2 --color lab --dataset cifa
                --mode "demo" --model [path_to_checkpoint .ckpt] --input [path to grayscale image]
 ```
                
-with the model pretrained on CIFAR
+with the model pretrained on Imagenet
 ```bash
 python main.py --nr_gpus 1 -c 160 -l 4 --downsample 4 --color lab --dataset imagenet \
                --mode "demo" --model [path_to_checkpoint .ckpt] --input [path to grayscale image]
