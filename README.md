@@ -36,14 +36,14 @@ British Machine Vision Conference (BMVC), 2017
 
 Train on ImageNet.
 ```bash
-python main.py --nr_gpu 4 --batch_size 16 --test_batch_size 25 --init_batch_size 100  \
+python main.py --nr_gpus 4 --batch_size 16 --test_batch_size 25 --init_batch_size 100  \
                 -lr 0.00016 -p 0.999 -ld 0.99999 -c 160 -l 4 --downsample 4            \
                 --color lab --dataset imagenet --gen_epochs 1 --data_dir [data_dir]
 ```
 
 Train on CIFAR.
 ```bash
-python main.py --nr_gpu 4 --batch_size 16 --test_batch_size 16 --init_batch_size 100  \
+python main.py --nr_gpus 4 --batch_size 16 --test_batch_size 16 --init_batch_size 100  \
                 -lr 0.001 -p 0.999 -ld 0.99995 -c 160 -l 4 --downsample 2              \
                 --color lab --dataset cifar --gen_epochs 1 --data_dir [data_dir]
 ```
@@ -66,14 +66,21 @@ tar -xzvf imagenet_model.tar.gz
 Evaluate the model on the dataset validation split.
 (e.g., ImageNet)
 ```bash
-python main.py --nr_gpu 4 --batch_size 16 --test_batch_size 25 --init_batch_size 100  \
+python main.py --nr_gpus 4 --batch_size 16 --test_batch_size 25 --init_batch_size 100  \
                -c 160 -l 4 --downsample 4 --color lab --dataset imagenet --data_dir [data_dir] \
-               --mode "eval" --model [path_to_checkpoint]
+               --mode "eval" --model [path_to_checkpoint .ckpt]
 ```
 
-Apply the model on a given input (set `--nr_gpu 0` to run in CPU mode).
+Apply the model on a given input (set `--nr_gpus 0` to run in CPU mode).
+
+with the model pretrained on CIFAR
 ```bash
-python main.py --nr_gpu 1 --batch_size 16 --test_batch_size 25 --init_batch_size 100  \
-               -c 160 -l 4 --downsample 4 --color lab --dataset imagenet \
-               --mode "demo" --model [path_to_checkpoint] --input [path to grayscale image]
+python main.py --nr_gpus 1 -c 160 -l 4 --downsample 2 --color lab --dataset cifar \
+               --mode "demo" --model [path_to_checkpoint .ckpt] --input [path to grayscale image]
+```
+               
+with the model pretrained on CIFAR
+```bash
+python main.py --nr_gpus 1 -c 160 -l 4 --downsample 4 --color lab --dataset imagenet \
+               --mode "demo" --model [path_to_checkpoint .ckpt] --input [path to grayscale image]
 ```
