@@ -110,3 +110,8 @@ python main.py --nr_gpus 1 -c 160 -l 4 --downsample 4 --color lab --dataset imag
                --test_batch_size 16 --mode "demo" --model imagenet/model.ckpt         \
                --input "val_samples/*.JPEG"
 ```
+
+
+| Input        | Reconstructions          | Random samples  |
+| ------------- |:-------------:| -----:|
+| ![input](examples/demo_input.jpg) | ![rec](examples/demo_reconstructions.jpg) | ![gen1](examples/demo_generations.jpg) ![gen2](examples/demo_generations_2.jpg)
