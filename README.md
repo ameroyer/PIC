@@ -1,3 +1,10 @@
+![license](https://img.shields.io/github/license/ameroyer/PIC.svg)
+![GitHub repo size in bytes](https://img.shields.io/github/repo-size/ameroyer/PIC.svg)
+![GitHub top language](https://img.shields.io/github/languages/top/ameroyer/PIC.svg)
+![Maintenance](https://img.shields.io/maintenance/yes/2018.svg)
+![GitHub last commit](https://img.shields.io/github/last-commit/ameroyer/PIC.svg)
+
+
 # [PIC] Probabilistic Image Colorization
 Tensorflow implementation for [Probabilistic Image Colorization](https://arxiv.org/abs/1705.04258) - generating diverse and vibrant colorization using auto-regressive generative networks - on the CIFAR and ImageNet datasets.
 
