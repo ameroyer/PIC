@@ -19,29 +19,32 @@ Moreover, our training procedure is supported by a rigorous theoretical framewor
 If you find this work useful, please cite
 ```
 "Probabilistic Image Colorization"
-Amelie Royer, Alexander Kolesnikov, Christoph H. Lampert
-British Machine Vision Conference (BMVC), 2017
+ Amélie Royer, Alexander Kolesnikov, Christoph H. Lampert
+ British Machine Vision Conference (BMVC), 2017
 ```
 
 ## Instructions
 
-#### Dependencies
+### Dependencies
   * Python 2.6+ or 3+
-  * Tensorflow 1.0
+  * Tensorflow 1.0+
   * Numpy
-  * h5py
+  * h5py (for loading the imagenet dataset)
   * skimage
   
-#### Train the model
+  
+The main training and evaluation code is in `main.py`. Use `python main.py -- help` to display the various options available.
+  
+### Train the model
 
-Train on ImageNet.
+Train on **ImageNet** on 4 GPUS with color channels lying in the LAB colorspace and being generated at 1/4 the resolution of the original image.
 ```bash
 python main.py --nr_gpus 4 --batch_size 16 --test_batch_size 25 --init_batch_size 100  \
                 -lr 0.00016 -p 0.999 -ld 0.99999 -c 160 -l 4 --downsample 4            \
                 --color lab --dataset imagenet --gen_epochs 1 --data_dir [data_dir]
 ```
 
-Train on CIFAR.
+Same training on **CIFAR**.
 ```bash
 python main.py --nr_gpus 4 --batch_size 16 --test_batch_size 16 --init_batch_size 100  \
                 -lr 0.001 -p 0.999 -ld 0.99995 -c 160 -l 4 --downsample 2              \
@@ -49,9 +52,9 @@ python main.py --nr_gpus 4 --batch_size 16 --test_batch_size 16 --init_batch_siz
 ```
 
 
-#### Apply the model
+### Evaluation of a pre-trained model on the test set
 
-Download the pre-trained models.
+Download the public pre-trained models (ImageNet and CIFAR).
 ```bash
 wget http://pub.ist.ac.at/~aroyer/Models/PIC/cifar_model.tar.gz
 tar -xzvf cifar_model.tar.gz
@@ -63,24 +66,40 @@ wget http://pub.ist.ac.at/~aroyer/Models/PIC/imagenet_model.tar.gz
 tar -xzvf imagenet_model.tar.gz
 ```
 
-Evaluate the model on the dataset validation split.
-(e.g., ImageNet)
+Evaluate the model on the dataset validation split. For instance for ImageNet:
 ```bash
 python main.py --nr_gpus 4 --batch_size 16 --test_batch_size 25 --init_batch_size 100  \
-               -c 160 -l 4 --downsample 4 --color lab --dataset imagenet --data_dir [data_dir] \
-               --mode "eval" --model [path_to_checkpoint .ckpt]
+               -c 160 -l 4 --downsample 4 --color lab --dataset imagenet --mode "eval" \
+               --data_dir [data_dir] --model [path_to_checkpoint .ckpt]
 ```
 
-Apply the model on a given input (set `--nr_gpus 0` to run in CPU mode).
 
-with the model pretrained on CIFAR
+### Apply a pre-trained model on selected samples
+
+Apply the model on given colored images to generate (i) reconstruction and (ii) random samples from grayscale version of the input images. The generated images are saved as `demo_reconstructions.jpg` and `demo_generations.jpg` respectively. 
+
+on **CIFAR**
 ```bash
-python main.py --nr_gpus 1 -c 160 -l 4 --downsample 2 --color lab --dataset cifar \
-               --mode "demo" --model [path_to_checkpoint .ckpt] --input [path to grayscale image]
+python main.py --nr_gpus 1 -c 160 -l 4 --downsample 2 --color lab --dataset cifar --test \
+               --mode "demo" --model [path_to_checkpoint .ckpt] --input [path to image(s)]
 ```
                
-with the model pretrained on Imagenet
+on **ImageNet**
 ```bash
 python main.py --nr_gpus 1 -c 160 -l 4 --downsample 4 --color lab --dataset imagenet \
-               --mode "demo" --model [path_to_checkpoint .ckpt] --input [path to grayscale image]
+               --mode "demo" --model [path_to_checkpoint .ckpt] --input [path to image(s)]
+```
+
+
+## Demo example
+
+For instance, to generate reconstructions and samples on the images in `samples_val`, which are samples from the validation set of the ImageNet dataset, with the pre-trained ImageNet model (*Note:* set `--nr_gpus 0` to run in CPU mode):
+
+```bash
+wget http://pub.ist.ac.at/~aroyer/Models/PIC/imagenet_model.tar.gz
+tar -xzvf imagenet_model.tar.gz
+
+python main.py --nr_gpus 1 -c 160 -l 4 --downsample 4 --color lab --dataset imagenet \
+               --test_batch_size 16 --mode "demo" --model imagenet/model.ckpt         \
+               --input "val_samples/*.JPEG"
 ```
