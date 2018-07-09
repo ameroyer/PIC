@@ -1,5 +1,6 @@
 from __future__ import print_function
 import os
+import glob
 import sys
 import argparse
 from time import gmtime, strftime
@@ -80,7 +81,6 @@ if args.mode in ['eval', 'demo'] and not args.model:
 if args.mode == 'demo':
     if not args.input:
         raise IOError("Error: missing input grayscale image in demo mode")
-    args.test_batch_size = 1
     
 num_outputs = (10 * args.nr_logistic_mix if args.color == "RGB"
                else 8 * args.nr_logistic_mix if args.color == "lab"
@@ -104,12 +104,13 @@ if args.mode != 'demo':
     elif args.dataset == 'imagenet':
         import h5py
         with h5py.File(os.path.join(args.data_dir, 'imagenet-128.hdf5')) as f:
-            images_train = np.array(f['train'])
+            if args.mode == 'train':
+                images_train = np.array(f['train'])
             images_test = np.array(f['val'])
     else:
         raise NameError('Unknown dataset')
-
-    WIDTH, HEIGHT, C_IN = images_train.shape[1:]   # number of channel of the input RGB
+    print('Finished loading data')
+    WIDTH, HEIGHT, C_IN = images_test.shape[1:]   # number of channel of the input RGB
     np.random.shuffle(images_test)
     images_test_gen = images_test[:args.test_batch_size * args.nr_gpus]
 else:
@@ -428,7 +429,7 @@ with tf.Session() as sess:
                     for xx in get_batches(images_test, args.nr_gpus * args.batch_size):
                         bpd = sess.run(bits_per_dim_val, {x: convert_color(xx,
                                                                            colorspace="RGB",
-                                                                           malized_out=True),
+                                                                           normalized_out=True),
                                                           x_clr: convert_color(xx,
                                                                                colorspace=args.color,
                                                                                normalized_out=True)})
@@ -500,51 +501,69 @@ with tf.Session() as sess:
             generate_samples(images_test_gen, sess, summary_writer, from_embedding=True, id=(ngen + 1))
             print("\rSample %d ..." % (ngen + 1), bcolors.CYAN, "Done", bcolors.RES)
 
-    ### Apply the model on one image
+    ### Apply the model on one or more image for reconstruction and generation
     else:
-        image = imread(os.path.abspath(args.input))
-        if len(image.shape) == 3:
+        # Load images
+        images_pathes = glob.glob(args.input)
+        color_images = []
+        gray_images = []
+        for path in images_pathes:
+            image = imread(os.path.abspath(path), mode='RGB')
+            assert len(image.shape) == 3
             w, h, _ = image.shape
-            image = imresize(image, (WIDTH, HEIGHT))[:, :, 0][:, :, None]
-        else:
-            w, h = image.shape
-            image = imresize(image, (WIDTH, HEIGHT))[:, :, None]
-        base, ext = os.path.basename(args.input).rsplit('.', 1)
-        out_path = os.path.join(log_dir, "%s_colorized.%s" % (base, ext))
-
-        # Sampler
-        image = (image - 127.5) / 127.5
-        image = image.astype(np.float32)
-        image = image[None, :, :, :]
-
-        x_gen = np.zeros((1, WIDTH // args.downsample, HEIGHT // args.downsample, 3), dtype=float)
-        feed = ({x_gray_gen: image, scale_var:float(not args.sample_mode)})
-        feed.update({embedding_cache[i]: sess.run(embedding_cache[i], {x_gray_gen: image}) for i in range(args.nr_gpus)})
-        
-        for yi in range(0, WIDTH // args.downsample):
-            print('\rProcessing pixel row %d/%d' % (yi + 1, WIDTH // args.downsample), end='')
-            for xi in range(0, HEIGHT // args.downsample):
-                feed.update({x_canvas_gen: x_gen})
-                new_x_gen_np = np.concatenate(sess.run(samplers_from_pic, feed))
-                x_gen[:, yi, xi, :] = convert_color(new_x_gen_np,
-                                                    colorspace=args.color,
-                                                    normalized_in=True,
-                                                    normalized_out=True,
-                                                    reverse=True)[:, yi, xi, :]
+            image = imresize(image, (WIDTH, HEIGHT), interp='bicubic')[:, :, :]
+            color_images.append(image)
+            # convert to lab and grayscale
+            image = color_to_gray(convert_color(image, colorspace=args.color, normalized_out=True), colorspace=args.color)
+            gray_images.append(image)
+        color_images = np.array(color_images)
+        gray_images = np.array(gray_images)        
+        # save input images
+        imsave('demo_input.jpg', tile_image(color_images)[0])
+            
+        ### 1. Test reconstructions of the colored images
+        print('Reconstruction...')
+        feed_dict = {x_gray_gen: gray_images, 
+                     scale_var: float(not args.sample_mode),
+                     x_canvas_gen: nd.zoom(
+                         pcnn_norm(color_images), (1.0, 1.0 / args.downsample, 1.0 / args.downsample, 1.0), order=1)}
+        new_x_gen_np = sess.run(samplers_from_pic, feed_dict=feed_dict)
+        x_gen = convert_color(np.concatenate(new_x_gen_np, axis=0), colorspace=args.color,
+                              normalized_in=True, normalized_out=True, reverse=True)
+        # resize and convert back to rgb
         if args.color == 'RGB':
             x_gen = nd.zoom(x_gen, (1.0, args.downsample, args.downsample, 1.0), order=1)
+            x_gen = np.concatenate([gray_images, x_gen], axis=3)
         else:
-            x_gen = nd.zoom(convert_color(x_gen,
-                                          colorspace=args.color,
-                                          normalized_in=True,
-                                          normalized_out=True,
-                                          reverse=False)[..., 1:],
-                                          (1.0, args.downsample, args.downsample, 1.0), order=1)
-            x_gen = np.concatenate([image, x_gen], axis=3)
-        x_gen = convert_color(x_gen, colorspace=args.color,
-                              normalized_in=True,
-                              normalized_out=False,
-                              reverse=True)[0, ...]
-        x_gen = imresize(x_gen, (w, h))
-        print(out_path)
-        imsave(out_path, x_gen)
+            x_gen = nd.zoom(
+                convert_color(x_gen, colorspace=args.color, normalized_in=True, normalized_out=True, reverse=False)[..., 1:],
+                (1.0, args.downsample, args.downsample, 1.0), order=1)
+            x_gen = np.concatenate([gray_images, x_gen], axis=3)
+            x_gen = convert_color(x_gen, colorspace=args.color, normalized_in=True, normalized_out=False, reverse=True)
+        imsave('demo_reconstructions.jpg', tile_image(x_gen)[0])
+        
+        ### 2. Test generation on the grayscale images
+        print('Generation...')
+        feed_dict = ({x_gray_gen: gray_images, scale_var: float(not args.sample_mode)})
+        x_gen = np.zeros((args.test_batch_size, WIDTH // args.downsample, HEIGHT // args.downsample, 3), dtype=float)
+        #feed.update({embedding_cache[i]: sess.run(embedding_cache[i], {x_gray_gen: image}) for i in range(args.nr_gpus)})
+        for yi in range(0, WIDTH // args.downsample):
+            print('\r  * Processing pixel row %d/%d' % (yi + 1, WIDTH // args.downsample), end='')
+            for xi in range(0, HEIGHT // args.downsample):
+                feed_dict.update({x_canvas_gen: x_gen})
+                new_x_gen_np = np.concatenate(sess.run(samplers_from_pic, feed_dict=feed_dict))
+                x_gen[:, yi, xi, :] = convert_color(
+                    new_x_gen_np, colorspace=args.color, normalized_in=True, normalized_out=True, reverse=True)[:, yi, xi, :]
+        print()
+        # resize and convert back to rgb
+        if args.color == 'RGB':
+            x_gen = nd.zoom(x_gen, (1.0, args.downsample, args.downsample, 1.0), order=1)
+            x_gen = np.concatenate([gray_images, x_gen], axis=3)
+        else:
+            x_gen = nd.zoom(
+                convert_color(x_gen, colorspace=args.color, normalized_in=True, normalized_out=True, reverse=False)[..., 1:],
+                (1.0, args.downsample, args.downsample, 1.0), order=1)
+            x_gen = np.concatenate([gray_images, x_gen], axis=3)
+            x_gen = convert_color(x_gen, colorspace=args.color, normalized_in=True, normalized_out=False, reverse=True)
+        # save
+        imsave('demo_generations.jpg', tile_image(x_gen)[0])
