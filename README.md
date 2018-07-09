@@ -114,4 +114,4 @@ python main.py --nr_gpus 1 -c 160 -l 4 --downsample 4 --color lab --dataset imag
 
 | Input        | Reconstructions          | Random samples  |
 | ------------- |:-------------:| -----:|
-| ![input](examples/demo_input.jpg) | ![rec](examples/demo_reconstructions.jpg) | ![gen1](examples/demo_generations.jpg) ![gen2](examples/demo_generations_2.jpg)
+| <img src='examples/demo_input.jpg' width=300px> | <img src='examples/demo_reconstructions.jpg' width=300px> | <img src='examples/demo_generations.jpg' width=300px> |
