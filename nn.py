@@ -78,7 +78,7 @@ def conv(inp, name, filter_size, out_channels, stride=1,
 
         else:
             V, g, b = get_variable('V'), get_variable('g'), get_variable('b')
-            tf.assert_variables_initialized([V, g, b])
+            #tf.assert_variables_initialized([V, g, b])  # Note: Soon to be deprecated
             W = g[None, None, None] * tf.nn.l2_normalize(V, [0, 1, 2])
             if dilation is None:
                 out = tf.nn.conv2d(inp, W, strides, padding) + b[None, None, None]
@@ -117,7 +117,7 @@ def deconv(inp, name, filter_size, out_channels, stride=1,
 
         else:
             V, g, b = get_variable('V'), get_variable('g'), get_variable('b')
-            tf.assert_variables_initialized([V, g, b])
+            #tf.assert_variables_initialized([V, g, b])  # Note: Soon to be deprecated
             W = g[None, None, :, None] * tf.nn.l2_normalize(V, [0, 1, 3])
             out = tf.nn.conv2d_transpose(inp, W, target_shape, strides, padding) + b[None, None, None]
             if nonlinearity is not None:
